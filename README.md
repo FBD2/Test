@@ -29,15 +29,34 @@ A fully functional voice call application similar to Discord/Zoom, built with We
 npm install
 ```
 
-2. Start the server:
+2. Install Cloudflare Tunnel (for global access):
+```bash
+npm install -g cloudflared
+```
+
+### Starting the Application
+
+#### Option 1: Using the Launcher (Easiest)
+Just double-click: **`start-voice-call.bat`**
+
+This will:
+- Start the server
+- Start the Cloudflare tunnel
+- Show you the public URL to share
+
+#### Option 2: Manual Start
+
+**Terminal 1 - Start Server:**
 ```bash
 npm start
 ```
 
-3. Open your browser and navigate to:
+**Terminal 2 - Start Global Tunnel:**
+```bash
+cloudflared tunnel --url http://localhost:3000
 ```
-http://localhost:3000
-```
+
+Copy the URL from Terminal 2 (e.g., `https://xxx-yyy.trycloudflare.com`) and share it!
 
 ### For Development (with auto-restart)
 

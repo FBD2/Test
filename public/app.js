@@ -109,11 +109,18 @@ async function setUsername() {
             } 
         });
         console.log('Microphone access granted');
+        console.log('Local audio tracks:', localStream.getAudioTracks());
+        
+        // Test local stream
+        localStream.getAudioTracks().forEach(track => {
+            console.log('Audio track enabled:', track.enabled);
+            console.log('Audio track settings:', track.getSettings());
+        });
         
         switchScreen('login-screen', 'main-screen');
     } catch (error) {
         console.error('Error accessing microphone:', error);
-        alert('Please allow microphone access to use voice calls');
+        alert('❌ MICROPHONE ACCESS DENIED!\n\nPlease:\n1. Click the lock icon in the address bar\n2. Allow microphone access\n3. Refresh the page and try again');
     }
 }
 
@@ -172,14 +179,22 @@ async function createPeerConnection(userId, username, initiator = false) {
     peerConnections.set(userId, peerConnection);
 
     // Add local stream
-    localStream.getTracks().forEach(track => {
-        peerConnection.addTrack(track, localStream);
-    });
+    if (localStream) {
+        localStream.getTracks().forEach(track => {
+            console.log(`Adding ${track.kind} track to peer ${userId}:`, track.enabled);
+            peerConnection.addTrack(track, localStream);
+        });
+    } else {
+        console.error('❌ No local stream available! Microphone not enabled.');
+    }
 
     // Handle incoming stream
     peerConnection.ontrack = (event) => {
-        console.log('Received remote track from:', userId);
+        console.log('✅ Received remote track from:', userId);
+        console.log('Track kind:', event.track.kind);
+        console.log('Track enabled:', event.track.enabled);
         const remoteStream = event.streams[0];
+        console.log('Remote stream tracks:', remoteStream.getTracks());
         playRemoteStream(userId, remoteStream);
     };
 
@@ -205,31 +220,40 @@ async function createPeerConnection(userId, username, initiator = false) {
     // If initiator, create and send offer
     if (initiator) {
         try {
-            const offer = await peerConnection.createOffer();
+            const offer = await peerConnection.createOffer({
+                offerToReceiveAudio: true,
+                offerToReceiveVideo: false
+            });
             await peerConnection.setLocalDescription(offer);
             
+            console.log('📤 Sending offer to:', userId);
             socket.emit('offer', {
                 offer: offer,
                 targetUserId: userId,
                 roomId: currentRoomId
             });
         } catch (error) {
-            console.error('Error creating offer:', error);
+            console.error('❌ Error creating offer:', error);
         }
     }
 }
 
 // Handle received offer
 async function handleOffer(offer, fromUserId, fromUsername) {
+    console.log('📥 Received offer from:', fromUsername);
     await createPeerConnection(fromUserId, fromUsername, false);
     
     const peerConnection = peerConnections.get(fromUserId);
     
     try {
         await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-        const answer = await peerConnection.createAnswer();
+        const answer = await peerConnection.createAnswer({
+            offerToReceiveAudio: true,
+            offerToReceiveVideo: false
+        });
         await peerConnection.setLocalDescription(answer);
         
+        console.log('📤 Sending answer to:', fromUsername);
         socket.emit('answer', {
             answer: answer,
             targetUserId: fromUserId
@@ -237,20 +261,24 @@ async function handleOffer(offer, fromUserId, fromUsername) {
         
         addParticipant(fromUserId, fromUsername);
     } catch (error) {
-        console.error('Error handling offer:', error);
+        console.error('❌ Error handling offer:', error);
     }
 }
 
 // Handle received answer
 async function handleAnswer(answer, fromUserId) {
+    console.log('📥 Received answer from:', fromUserId);
     const peerConnection = peerConnections.get(fromUserId);
     
     if (peerConnection) {
         try {
             await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+            console.log('✅ Answer processed successfully');
         } catch (error) {
-            console.error('Error handling answer:', error);
+            console.error('❌ Error handling answer:', error);
         }
+    } else {
+        console.error('❌ No peer connection found for:', fromUserId);
     }
 }
 
