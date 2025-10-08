@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Call App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen active">
+            <div class="card">
+                <h1>🎙️ Voice Call App</h1>
+                <p class="subtitle">Connect with anyone, anywhere</p>
+                <input type="text" id="username-input" placeholder="Enter your name" maxlength="20">
+                <button onclick="setUsername()" class="btn btn-primary">Continue</button>
+            </div>
+        </div>
+
+        <!-- Main Screen -->
+        <div id="main-screen" class="screen">
+            <div class="header">
+                <h2>Welcome, <span id="display-username"></span>!</h2>
+            </div>
+
+            <div class="main-content">
+                <div class="card">
+                    <h3>Start or Join a Call</h3>
+                    <div class="input-group">
+                        <input type="text" id="room-id-input" placeholder="Enter Room ID">
+                    </div>
+                    <div class="button-group">
+                        <button onclick="createRoom()" class="btn btn-primary">Create Room</button>
+                        <button onclick="joinRoom()" class="btn btn-secondary">Join Room</button>
+                    </div>
+                    <div id="room-info" class="info-box hidden">
+                        <p class="info-text">Share this Room ID with others:</p>
+                        <div class="room-id-display">
+                            <span id="current-room-id"></span>
+                            <button onclick="copyRoomId()" class="btn-icon" title="Copy Room ID">📋</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call Screen -->
+        <div id="call-screen" class="screen">
+            <div class="call-header">
+                <div class="call-info">
+                    <h3>Room: <span id="call-room-id"></span></h3>
+                    <p id="call-status">Connecting...</p>
+                </div>
+            </div>
+
+            <div class="participants-grid" id="participants-grid">
+                <!-- Participants will be added here dynamically -->
+            </div>
+
+            <div class="call-controls">
+                <button id="mute-btn" onclick="toggleMute()" class="control-btn" title="Mute/Unmute">
+                    <span class="icon">🎤</span>
+                    <span class="label">Mute</span>
+                </button>
+                <button onclick="leaveCall()" class="control-btn end-call" title="Leave Call">
+                    <span class="icon">📞</span>
+                    <span class="label">Leave</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Connection Status -->
+        <div id="connection-status" class="status-indicator">
+            <span class="status-dot"></span>
+            <span class="status-text">Connecting...</span>
+        </div>
+    </div>
+
+    <!-- Audio elements container (hidden) -->
+    <div id="audio-container" style="display: none;"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
