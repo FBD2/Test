@@ -55,7 +55,8 @@ function initSocket() {
     socket.on('user-joined', async ({ userId, username }) => {
         console.log('User joined:', username);
         addParticipant(userId, username);
-        // The new user will initiate the connection
+        // Existing users initiate connection to the new user
+        await createPeerConnection(userId, username, true);
     });
 
     socket.on('user-left', ({ userId, username }) => {
